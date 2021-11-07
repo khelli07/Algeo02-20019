@@ -11,4 +11,4 @@ def load_image():
 
     return img_arr
 
-load_image()
+# load_image()

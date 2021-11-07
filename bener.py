@@ -3,55 +3,122 @@ from numpy.linalg import norm
 from scipy.linalg import hessenberg
 from random import normalvariate
 from math import sqrt
+from datetime import datetime, date
 
 
 # TODO : IMPLEMENTASI QR manual
-
+#rani
 # EigenVector + EigenVal
-def eigenQR(A):
-    temp,_ = hessenberg(A, True)
-    #temp = np.copy(A)
-    row = temp.shape[0]
-    QQ = np.eye(row)
+# def eigenQR(A):
+#     temp,_ = hessenberg(A, True)
+#     #temp = np.copy(A)
+#     row = temp.shape[0]
+#     QQ = np.eye(row)
 
-    for i in range(100000):
-        c = temp[row-1, row-1]
-        cI = c * np.eye(row)
-        Q, R = np.linalg.qr(np.subtract(temp, cI))
-        temp = np.add(R @ Q, cI)
+#     for i in range(1000):
+#         c = temp[row-1, row-1]
+#         cI = c * np.eye(row)
+#         Q, R = np.linalg.qr(np.subtract(temp, cI))
+#         temp = np.add(R @ Q, cI)
+#         QQ = QQ @ Q
 
-        QQ = QQ @ Q
+#         if (i%100 == 0):
+#             print(i, (datetime.now().time()))
+
+#     return np.diag(temp), QQ
+
+def eigenQR(matrix):
+
+    #Untuk sementara pakai punya numpy
+    n, m = matrix.shape
+    Q = np.random.rand(n, 1000)
+    Q, _ = np.linalg.qr(Q)
+    Q_prev = Q
+
+    #Itterate untuk mendapat hasil yang presisi  
+    for i in range (1000):
+        newMatrix = matrix.dot(Q)
+        Q, R = np.linalg.qr(newMatrix)
+        
+
+         # can use other stopping criteria as well 
+        err = ((Q - Q_prev) ** 2).sum()
+        
+        if i % 10 == 0:
+            print(i, err)
+
+        Q_prev = Q
+        if err < 1e-4:
+            break
+
+    #Return dalam bentuk eigenValue , eigenVector
+    # return np.diag(R),np.multiply(Q,-1)
+    return np.diag(R),Q
+
+# #Rani
+# def methodSVD(matrix):
+#     row, col = matrix.shape
     
-    return np.diag(temp), QQ
+#     eigAtA, rightSingular= eigenQR(np.transpose(matrix) @ matrix)
+#     Vt = np.transpose(rightSingular)
+#     rank = np.count_nonzero(eigAtA)
 
+#     #Sigma = np.zeros((row, col))
+#     SigmaInv = np.zeros((row, col))
+#     eigSort = np.sort(eigAtA)[::-1]
+#     #eigAtA = eigAtA[::-1].sort()
+#     for i in range(len(eigSort)):
+#         #Sigma[i][i]= np.sqrt(eigSort[i])
+#         SigmaInv[i][i] = 1/np.sqrt(eigSort[i])
+
+#     U = matrix @ Vt @ SigmaInv
+    
+#     return U, eigSort, Vt
 def methodSVD(matrix):
-    row, col = matrix.shape
     
-    eigAtA, rightSingular= eigenQR(np.transpose(matrix) @ matrix)
-    Vt = np.transpose(rightSingular)
-    rank = np.count_nonzero(eigAtA)
+    #Singular kiri
+    eigenValue ,leftSingular= eigenQR(matrix @ np.transpose(matrix))
 
-    #Sigma = np.zeros((row, col))
-    SigmaInv = np.zeros((row, col))
-    eigSort = np.sort(eigAtA)[::-1]
-    #eigAtA = eigAtA[::-1].sort()
-    for i in range(len(eigSort)):
-        #Sigma[i][i]= np.sqrt(eigSort[i])
-        SigmaInv[i][i] = 1/np.sqrt(eigSort[i])
-
-    U = matrix @ Vt @ SigmaInv
+    _, rightSingular= eigenQR( np.transpose(matrix) @ matrix )
     
-    return U, eigSort, Vt
+    # fixEigenVector(leftSingular)
+    # fixEigenVector(rightSingular)
+    # sigma = np.array([[0.0 for i in range(matrix.shape[1])] for j in range(matrix.shape[0])])
+    # for i in range(matrix.shape[0]):
+    #     sigma[i][i] = np.sqrt(eigenValue)[i]
+    
+    new = np.array([0.0 for i in range(len(eigenValue))])
+    for i in range(eigenValue.shape[0]):
+        new[i]= np.sqrt(eigenValue)[i]
 
-def constructNewImg(u,s,v,rank = 10):
-    leftSide = np.matmul(u[:, 0:rank], np.diag(s)[0:rank, 0:rank])
-    # leftSide = np.matmul(u[:, 0:rank], s[0:rank, :])
+    np.round(new, 6)
+    
+    return leftSingular,new,np.transpose(rightSingular)
+
+def constructNewImg(u,s,v,rank):
+
+    # result = np.zeros((u.shape[0], v.shape[1]),dtype = float)
+    # print("ini shape", result.shape)
+    # for i in range (rank):
+    #     result = np.add(result,u[:][i] * s[i] @ v[i][:]  )  
+    # print(result)
+    # # leftSide = np.matmul(u[:, 0:rank], np.diag(s)[0:rank, 0:rank])
+    # # # leftSide = np.matmul(u[:, 0:rank], s[0:rank, :])
   
-    matrixSVD = np.matmul(leftSide, v[0:rank, :])
+    # # matrixSVD = np.matmul(leftSide, v[0:rank, :])
     
-    matrixSVDRounded = matrixSVD.astype('uint8')
+    # # matrixSVDRounded = matrixSVD.astype('uint8')
+    matsig = np.zeros((u.shape[0], v.shape[1]), dtype=float)
+    np.fill_diagonal(matsig, s)
+
+    res = np.zeros(matsig.shape, dtype=float)
+    for i in range(rank):
+        ui = np.matrix(u[:, i]).T
+        vi = np.matrix(v[i, :])
+        res += ui * matsig[i, i] @ vi
     
-    return matrixSVDRounded
+    
+    return res
 def main():
     m = int(input("nilai m: "))
     n = int(input("nilai n: "))
@@ -63,20 +130,20 @@ def main():
         for j in range(n):
             matriks[i][j] = float(input(("Nilai: ")))
 
-    u,s,v = methodSVD(matriks)
+    # u,s,v = methodSVD(matriks)
     a,b,c = np.linalg.svd(matriks)
 
 
 
-    print(matriks)
-    print("======")
-    print(u)
-    print("======")
-    print(s)
-    print("======")
-    print(v)
-    print("======")
-    print(s.shape)
+    # print(matriks)
+    # print("======")
+    # print(u)
+    # print("======")
+    # print(s)
+    # print("======")
+    # print(v)
+    # print("======")
+    # print(s.shape)
     print("======")
     print(a)
     print("======")
@@ -84,10 +151,10 @@ def main():
     print("======")
     print(c)
     print("======")
-    compresedImage = constructNewImg(u,s,v, s.shape[0])
+    # compresedImage = constructNewImg(u,s,v, s.shape[0])
     compresedImagea = constructNewImg(a,b,c, b.shape[0])
     print("===aaa===")
-    print(compresedImage)
+    # print(compresedImage)
     print("==xghaa====")
     print(compresedImagea)
 
@@ -119,7 +186,7 @@ def svd_1d(A, epsilon=1e-10):
         currentV = currentV / norm(currentV)
 
         if abs(np.dot(currentV, lastV)) > 1 - epsilon:
-            print("converged in {} iterations!".format(iterations))
+            # print("converged in {} iterations!".format(iterations))
             return currentV
 
 
@@ -165,4 +232,3 @@ def fixEigenVector(matrix):
         if (matrix[0][i]) < 0:
             matrix[:,i] *= -1
 
-    

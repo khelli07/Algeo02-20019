@@ -10,7 +10,7 @@ print(datetime.now().time())
 # img = cv.imread('./tester/guild.png')
 img = cv.imread('./lena.png')
 img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-# img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
+img = cv.cvtColor(img, cv.COLOR_RGB2GRAY)
 
 img_array = np.asarray(img)
 print(img_array.shape)
@@ -26,7 +26,7 @@ def rgbMatrix(matrix):
 
     return [aRed, aGreen, aBlue]
 
-imageRed,imageGreen,imageBlue = rgbMatrix(img_array)
+# imageRed,imageGreen,imageBlue = rgbMatrix(img_array)
 start = datetime.now().time()
 
 
@@ -37,7 +37,7 @@ start = datetime.now().time()
 # print(datetime.datetime.now().time())
 # uBlue,sBlue,vBlue = Operator.methodSVD(imageBlue)
 # print(datetime.datetime.now().time())
-# uImage,sImage,vImage = Operator.methodSVD(img_array)
+uImage,sImage,vImage = Operator.methodSVD(img_array)
 
 # uRed,sRed,vRed = np.linalg.svd(imageRed)
 # print(datetime.now().time())
@@ -46,19 +46,19 @@ start = datetime.now().time()
 # uBlue,sBlue,vBlue = np.linalg.svd(imageBlue)
 # print(datetime.now().time())
 x = int(img_array.shape[0] / 20)
-uImage,sImage,vImage = np.linalg.svd(img_array)
+# uImage,sImage,vImage = np.linalg.svd(img_array)
 
-uImage,sImage,vImage = Operator.svd(img_array,x)
-uRed,sRed,vRed = Operator.svd(imageRed,x)
-print(datetime.now().time())
-uGreen,sGreen,vGreen = Operator.svd(imageGreen,x)
-print(datetime.now().time())
-uBlue,sBlue,vBlue = Operator.svd(imageBlue,x)
-print(datetime.now().time())
+# uImage,sImage,vImage = Operator.svd(img_array,x)
+# uRed,sRed,vRed = Operator.svd(imageRed,x)
+# print(datetime.now().time())
+# uGreen,sGreen,vGreen = Operator.svd(imageGreen,x)
+# print(datetime.now().time())
+# uBlue,sBlue,vBlue = Operator.svd(imageBlue,x)
+# print(datetime.now().time())
 
 
 
-uImageLin,sImageLin,vImageLin = np.linalg.svd(img_array)
+#uImageLin,sImageLin,vImageLin = np.linalg.svd(img_array)
 # print(sImage)
 # print("tes")
 # print(sImageLin)
@@ -80,7 +80,7 @@ uImageLin,sImageLin,vImageLin = np.linalg.svd(img_array)
 # compresedGreen = Operator.constructNewImg(uRed,sGreen,vGreen,x) 
 # compresedBlue =Operator.constructNewImg(uBlue,sBlue,vBlue,x) 
 compresedImg = Operator.constructNewImg(uImage,sImage,vImage,x)
-compresedImg = Operator.constructNewImg(uImageLin,sImageLin,vImageLin,x)
+# compresedImg = Operator.constructNewImg(uImageLin,sImageLin,vImageLin,x)
 
 
 # matrix = np.asarray(gray_img)
