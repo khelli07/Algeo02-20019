@@ -1,25 +1,59 @@
 import React, { useState } from "react";
+import axios from "axios";
 import "./App.css";
 
 function App() {
-  const [message, setMessage] = useState("");
+  const [compressedImage, setCompressedImage] = useState({
+    file: [],
+    filepreview: null,
+  });
+  const [uploadedImage, setuploadedImage] = useState({
+    file: [],
+    filepreview: null,
+  });
+  const [loader, setLoader] = useState(0);
 
-  async function fetchMessage() {
-    const response = await fetch(`http://127.0.0.1:5000/`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+  const imgSelectHandler = (event) => {
+    setuploadedImage({
+      ...uploadedImage,
+      file: event.target.files[0],
+      filepreview: URL.createObjectURL(event.target.files[0]),
     });
-    const data = await response.json();
-    setMessage(data.message);
-    console.log(data.message);
-  }
+  };
+
+  const imgUploadHandler = () => {
+    const fd = new FormData();
+    fd.append("file", uploadedImage.file);
+
+    axios
+      .post("http://127.0.0.1:5000/upload", fd, {
+        onUploadProgress: (progressEvent) => {
+          setLoader((progressEvent.loaded / progressEvent.total) * 100);
+        },
+      })
+      .then((response) => console.log(response))
+      .catch(() =>
+        window.alert(
+          "An error occured! Please check your uploaded picture again!"
+        )
+      );
+  };
 
   return (
     <div className="App">
-      <button onClick={(e) => fetchMessage()}>click to show message</button>
-      <h3>{message}</h3>
+      <div className="container">
+        <input className="input-file" type="file" onChange={imgSelectHandler} />
+        <button className="btn-upload" onClick={imgUploadHandler}>
+          Upload
+        </button>
+        {uploadedImage.filepreview !== null ? (
+          <img
+            className="previewimg"
+            src={uploadedImage.filepreview}
+            alt="uploaded image"
+          />
+        ) : null}
+      </div>
     </div>
   );
 }
