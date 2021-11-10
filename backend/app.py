@@ -1,8 +1,10 @@
-from flask import Flask, request, jsonify, json
+from flask import Flask, request, json, send_file
 from flask_cors import CORS
+from numpy.core.fromnumeric import compress
 from werkzeug.utils import secure_filename
 from os.path import join, dirname, realpath
-from SVD import hello
+from SVD import *
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -19,7 +21,7 @@ def allowed_file(filename):
 def home():
     return "Hello from the API!"
 
-@app.route('/upload', methods = ['POST'])
+@app.route('/upload', methods = ['GET', 'POST'])
 def upload():
     file = request.files['file']
    
@@ -28,9 +30,9 @@ def upload():
         file.save(join(app.config['BACKEND_UPLOAD'], filename))
         response = app.response_class(
             response = json.dumps(
-                {"error": "Upload image successful!"}), 
+                {"message": "Upload image successful!"}), 
                 status = 200)
-
+        return response
     else:
         response = app.response_class(
             response = json.dumps(
@@ -39,9 +41,20 @@ def upload():
     
     return response
 
-@app.route('/compressed', methods=['GET'])
-def compressed():
-    return "Ini svd"
+@app.route('/compressed/<string:imgname>/<int:percent>', methods = ['GET'])
+def compressed(imgname, percent):
+    file_dir = app.config['BACKEND_UPLOAD']
+    img = cv.imread(file_dir + imgname)
+
+    b, g, r = cv.split(img)
+    reducedRed = getReducedMatrix(r, percent)
+    reducedGreen = getReducedMatrix(g, percent)
+    reducedBlue = getReducedMatrix(b, percent)
+
+    compressed = cv.merge((reducedBlue, reducedGreen, reducedRed)).astype('uint8')
+    outdir = file_dir + f"{percent}_{imgname}"
+    cv.imwrite(outdir, compressed)
+    return send_file(outdir)
 
 if __name__ == "__main__":
     app.run(debug=True)
