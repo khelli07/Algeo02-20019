@@ -33,6 +33,7 @@ def isFlipped(matrix):
     return (row < col)
 
 def getEigenRight(mat, eps = 1.e-5):
+    mat = np.matrix(mat, dtype=np.float64)
     smat = np.matmul(mat.T, mat)
 
     # Params
@@ -106,15 +107,11 @@ def getEigenRight(mat, eps = 1.e-5):
  
             diag[l] -= p; subdElmt[l] = g; subdElmt[m] = 0
 
-    sortedIdx = np.argsort(diag)[::-1][:n]
-    eigenval = diag.copy()
-    eigenval.sort(reverse=True)
+    eigenval = np.array(diag.copy())
+    eigenval[np.where(eigenval < 0)] = 0
+    sortedIdx = np.argsort(eigenval)[::-1]
     singularMatrix = singularMatrix[:, sortedIdx]
-
-    negIdx = [eigenval.index(val) for val in eigenval if val < 0]
-    for i in negIdx:
-        eigenval[i] *= -1
-        singularMatrix[i, :] *= -1
+    eigenval = np.sort(eigenval)[::-1]
 
     return eigenval, singularMatrix
 
@@ -143,20 +140,15 @@ def getReducedMatrix(matrix, percent):
     u, sigma, v = getSVD(matrix)
 
     maxrank = len([1 for s in sigma if s != 0.0])
-    percent = 100 - percent
-    rank = int(percent * maxrank * 1.e-2)
+    r = int((100 - percent) * maxrank * 1.e-2)
 
-    dim = (col, row) if isFlipped(matrix) else (row, col)
-    reduced = np.matrix(np.zeros(dim, dtype=np.float64))
-    for i in range(rank):
-        ui = np.matrix(u[:, i]).T
-        vi = np.matrix(v.T[i, :])
-        reduced += ui * sigma[i] @ vi
+    matsig = np.matrix(np.zeros((row, col)), dtype=np.float64)
+    np.fill_diagonal(matsig, sigma)
+    ui = np.matrix(u[:, :r])
+    vi = np.matrix(v.T[:r, :])
+    reduced = ui @ matsig[:r, :r] @ vi
 
     if isFlipped(matrix):
         return reduced.T
     else:
         return reduced
-
-def compressImage(image):
-    return image
