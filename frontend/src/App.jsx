@@ -25,18 +25,18 @@ function App() {
     const fd = new FormData();
     fd.append("file", uploadedImage.file);
 
-    axios
-      .post("http://127.0.0.1:5000/upload", fd, {
-        onUploadProgress: (progressEvent) => {
-          setLoader((progressEvent.loaded / progressEvent.total) * 100);
-        },
-      })
-      .then((response) => console.log(response))
-      .catch(() =>
-        window.alert(
-          "An error occured! Please check your uploaded picture again!"
-        )
-      );
+    if (uploadedImage.file.length === 0) {
+      window.alert("Woi upload filenya!!");
+    } else {
+      axios
+        .post("http://127.0.0.1:5000/upload", fd, {
+          onUploadProgress: (progressEvent) => {
+            setLoader((progressEvent.loaded / progressEvent.total) * 100);
+          },
+        })
+        .then((response) => console.log(response))
+        .catch((error) => window.alert(error.response.data.error));
+    }
   };
 
   return (
@@ -48,7 +48,7 @@ function App() {
         </button>
         {uploadedImage.filepreview !== null ? (
           <img
-            className="previewimg"
+            className="preview-img"
             src={uploadedImage.filepreview}
             alt="uploaded image"
           />

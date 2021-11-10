@@ -1,4 +1,4 @@
-from flask import Flask, request, json
+from flask import Flask, request, jsonify, json
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from os.path import join, dirname, realpath
@@ -8,31 +8,39 @@ app = Flask(__name__)
 CORS(app)
 
 ALLOWED_EXT = {'png', 'jpg', 'jpeg'}
+# Do we need to save the file ?
 BACKEND_UPLOAD = join(dirname(realpath(__file__)), 'uploaded_pics\\')
 app.config['BACKEND_UPLOAD'] = BACKEND_UPLOAD
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXT
+    return ('.' in filename) and (filename.rsplit('.', 1)[-1].lower() in ALLOWED_EXT)
 
 @app.route('/', methods=['GET'])
 def home():
-    return {'message': hello()}
+    return "Hello from the API!"
 
 @app.route('/upload', methods = ['POST'])
 def upload():
     file = request.files['file']
-    if not file:
-        return "No image uploaded", 400
-    elif allowed_file(file.filename):
+   
+    if allowed_file(file.filename):
         filename = secure_filename(file.filename)
         file.save(join(app.config['BACKEND_UPLOAD'], filename))
-        return {"filename": file.filename,
-            "message": "Image successfully uploaded"}, 200
-    else:
-        return "Extension allowed are .jpg, .jpeg, and .png", 403
+        response = app.response_class(
+            response = json.dumps(
+                {"error": "Upload image successful!"}), 
+                status = 200)
 
-@app.route('/SVD')
-def SVD():
+    else:
+        response = app.response_class(
+            response = json.dumps(
+                {"error": "Extension allowed are .jpg, .jpeg, and .png"}), 
+                status = 400)
+    
+    return response
+
+@app.route('/compressed', methods=['GET'])
+def compressed():
     return "Ini svd"
 
 if __name__ == "__main__":
