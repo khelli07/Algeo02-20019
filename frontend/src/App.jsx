@@ -3,16 +3,19 @@ import axios from "axios";
 import "./App.css";
 
 function App() {
-  const [compressedStatus, setcompressedStatus] = useState(0);
-  const [uploadedImage, setuploadedImage] = useState({
+  const endpoint = "http://127.0.0.1:5000";
+
+  const [compressedStatus, setCompressedStatus] = useState(0);
+  const [uploadedImage, setUploadedImage] = useState({
     file: [],
     filepreview: null,
   });
-  const [loader, setLoader] = useState(0);
-  const percent = 50;
+  const [isCompressing, setIsCompressing] = useState(0);
+  const [percent, setPercent] = useState(0);
+  const [time, setTime] = useState(0);
 
   const imgSelectHandler = (event) => {
-    setuploadedImage({
+    setUploadedImage({
       ...uploadedImage,
       file: event.target.files[0],
       filepreview: URL.createObjectURL(event.target.files[0]),
@@ -25,12 +28,9 @@ function App() {
     if (uploadedImage.file.length === 0) {
       window.alert("Woi upload filenya!!");
     } else {
+      setIsCompressing(1);
       axios
-        .post("http://127.0.0.1:5000/upload", fd, {
-          onUploadProgress: (progressEvent) => {
-            setLoader((progressEvent.loaded / progressEvent.total) * 100);
-          },
-        })
+        .post(`${endpoint}/upload`, fd)
         .then((response) => console.log(response))
         .then(() => dataImage(uploadedImage.file.name, percent))
         .catch((error) => window.alert(error.response.data.error));
@@ -38,11 +38,16 @@ function App() {
   };
 
   async function dataImage(imgname, percent) {
+    let fetchTime = new Date().getTime();
+    console.log(imgname, percent);
     try {
       let response = await axios.get(
-        `http://localhost:5000/compressed/${imgname}/${percent}`
+        `${endpoint}/compressed/${imgname}/${percent}`
       );
-      setcompressedStatus(1);
+      fetchTime = ((await new Date().getTime()) - fetchTime) / 1000;
+      setCompressedStatus(1);
+      setIsCompressing(0);
+      setTime(fetchTime);
     } catch (error) {
       console.log(error);
     }
@@ -50,25 +55,68 @@ function App() {
 
   return (
     <div className="App">
-      <div className="container">
-        <input className="input-file" type="file" onChange={imgSelectHandler} />
-        <button className="btn-upload" onClick={imgUploadHandler}>
-          Upload
-        </button>
-        {uploadedImage.filepreview !== null ? (
-          <img
-            className="preview-img"
-            src={uploadedImage.filepreview}
-            alt="uploaded image"
-          />
-        ) : null}
+      <h2 className="title">
+        Image Compressor with Singular Value Decomposition
+      </h2>
+      <div className="body">
+        <div className="upload">
+          <div className="input-wrapper">
+            <div className="file-input">
+              <input className="file" type="file" onChange={imgSelectHandler} />
+              <button className="btn-upload" onClick={imgUploadHandler}>
+                Upload
+              </button>
+            </div>
+            <div className="percent-input">
+              <h4>Percentage</h4>
+              <input
+                className="percent"
+                type="number"
+                min="0"
+                max="100"
+                onChange={(e) => setPercent(e.target.value)}
+              />
+              <h4>%</h4>
+            </div>
+          </div>
+          <div className="loader">
+            {isCompressing ? <h3>Compressing... </h3> : null}
+            {compressedStatus !== 0 ? (
+              <h3>
+                Completed in <span className="time">{time}</span> s.
+              </h3>
+            ) : null}
+          </div>
+        </div>
 
-        {compressedStatus !== 0 ? (
-          <img
-            src={`http://localhost:5000/compressed/${uploadedImage.file.name}/${percent}`}
-            alt="compressed_image"
-          />
-        ) : null}
+        <div className="preview-container">
+          {uploadedImage.filepreview !== null ? (
+            <img
+              className="preview-img"
+              src={uploadedImage.filepreview}
+              alt="uploaded image"
+            />
+          ) : null}
+          {compressedStatus !== 0 ? (
+            <img
+              className="preview-img"
+              src={`http://localhost:5000/compressed/${uploadedImage.file.name}/${percent}`}
+              alt="compressed_image"
+            />
+          ) : null}
+        </div>
+
+        <div className="download-container">
+          {compressedStatus !== 0 ? (
+            <a
+              href={`http://localhost:5000/compressed/${uploadedImage.file.name}/${percent}`}
+              target="_blank"
+              download
+            >
+              <button className="download-btn">Download here</button>
+            </a>
+          ) : null}
+        </div>
       </div>
     </div>
   );

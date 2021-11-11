@@ -15,7 +15,6 @@ The Implicit QL Algorithm
 by Reinsch, Martin, and Wilkinson 
 '''
 #   IMPORTS
-import matplotlib.pyplot as plt
 from scipy import linalg
 import numpy as np
 import cv2 as cv
@@ -31,7 +30,6 @@ def hypotenuse(a, b):
 def isFlipped(matrix):
     row, col = matrix.shape
     return (row < col)
-
 def getEigenRight(mat, eps = 1.e-5):
     mat = np.matrix(mat, dtype=np.float64)
     smat = np.matmul(mat.T, mat)
@@ -51,9 +49,10 @@ def getEigenRight(mat, eps = 1.e-5):
         while True:
             m = l
             while True:
-                # Convergence test
+                # Look for small subdiagonal element
                 if (m + 1) == n:
                     break
+                # Convergence test
                 if abs(subdElmt[m]) <= eps * (abs(diag[m]) + abs(diag[m + 1])):
                     break 
                 m += 1
@@ -86,9 +85,9 @@ def getEigenRight(mat, eps = 1.e-5):
                     r = hypotenuse(cos, 1)
                     subdElmt[i + 1] = f * r 
                     sin = 1 / r
-                    cos *= sin 
+                    cos *= sin
                 else:
-                    sin = f / g 
+                    sin = f / g if g != 0 else 0
                     r = hypotenuse(sin, 1)
                     subdElmt[i + 1] = g * r 
                     cos = 1 / r 
@@ -105,7 +104,9 @@ def getEigenRight(mat, eps = 1.e-5):
                                             .dot(np.array([[cos, sin],
                                                           [-sin, cos]], dtype=np.float64))
  
-            diag[l] -= p; subdElmt[l] = g; subdElmt[m] = 0
+            diag[l] -= p
+            subdElmt[l] = g
+            subdElmt[m] = 0
 
     eigenval = np.array(diag.copy())
     eigenval[np.where(eigenval < 0)] = 0
@@ -116,6 +117,7 @@ def getEigenRight(mat, eps = 1.e-5):
     return eigenval, singularMatrix
 
 def getSVD(matrix):
+    matrix = np.matrix(matrix, dtype=np.float64)
     mcopy = matrix.copy()
     row, col = mcopy.shape
 
@@ -127,20 +129,23 @@ def getSVD(matrix):
     u = np.zeros((row, row))
     eigval, v = getEigenRight(mcopy)
 
-    sigma = [math.sqrt(x) for x in eigval]
-
+    # Only take nonzero eigenvalue
+    sigma = np.array([math.sqrt(x) for x in eigval if x != 0])
+    maxrank = len(sigma)
+    
     # Compute u from v
-    for i in range(col):
-        u[:, i] = (mcopy @ v[:, i]) / sigma[i]
+    for i in range(maxrank):
+        u[:, i] = mcopy @ v[:, i] / sigma[i]
 
-    return u, sigma, v
+    return u, sigma, v, maxrank
 
 def getReducedMatrix(matrix, percent):
+    matrix = np.matrix(matrix, dtype=np.float64)
     row, col = matrix.shape
-    u, sigma, v = getSVD(matrix)
-
-    maxrank = len([1 for s in sigma if s != 0.0])
-    r = int((100 - percent) * maxrank * 1.e-2)
+    
+    u, sigma, v, maxrank = getSVD(matrix)
+    percent = 100 - percent
+    r = math.ceil(percent/100 * maxrank)
 
     matsig = np.matrix(np.zeros((row, col)), dtype=np.float64)
     np.fill_diagonal(matsig, sigma)
@@ -152,3 +157,33 @@ def getReducedMatrix(matrix, percent):
         return reduced.T
     else:
         return reduced
+
+def compressImage(imagepath, percent, outputName):
+    img = cv.imread(imagepath, cv.IMREAD_UNCHANGED)
+
+    # Handle file such as .png
+    if img.shape[-1] == 4:
+        b, g, r, a = cv.split(img)
+        reducedRed = getReducedMatrix(r, percent)
+        reducedGreen = getReducedMatrix(g, percent)
+        reducedBlue = getReducedMatrix(b, percent)
+        alpha = np.matrix(a, dtype=np.float64)
+        reducedPict = cv.merge((reducedRed, reducedGreen, reducedBlue, alpha)).astype("uint8")
+        cv.imwrite(outputName, cv.cvtColor(reducedPict, cv.COLOR_BGRA2RGBA))
+
+    # Handle file such as .jpg or .jpeg, but RGB/BGR
+    elif img.shape[-1] == 3:
+        b, g, r = cv.split(img)
+        reducedRed = getReducedMatrix(r, percent)
+        reducedGreen = getReducedMatrix(g, percent)
+        reducedBlue = getReducedMatrix(b, percent)
+        reducedPict = cv.merge((reducedRed, reducedGreen, reducedBlue)).astype("uint8")
+        cv.imwrite(outputName, cv.cvtColor(reducedPict, cv.COLOR_BGRA2RGBA))
+
+    # Handle black and white image
+    else: 
+        gray = img.copy()
+        reducedPict = getReducedMatrix(gray, percent)
+        cv.imwrite(outputName, img)
+
+    return reducedPict
