@@ -6,7 +6,7 @@
 #   Made with <3 by:                                #
 #   - Maria Khelli                                  #
 #   - Maharani Ayu Putri Irawan                     #
-#   - Suryanto Tan                                  #
+#   - Suryanto                                      #
 #####################################################
 '''
 Source: 
@@ -50,10 +50,10 @@ def getEigenRight(mat, eps = 1.e-5):
         while True:
             m = l
             while True:
-                # Look for small subdiagonal element
+                
                 if (m + 1) == n:
                     break
-                # Convergence test
+                
                 if abs(subdElmt[m]) <= eps * (abs(diag[m]) + abs(diag[m + 1])):
                     break 
                 m += 1
@@ -66,12 +66,12 @@ def getEigenRight(mat, eps = 1.e-5):
 
             j += 1
 
-            # Form shift
+           
             p = diag[l]
             g = (diag[l + 1] - p) / (2 * subdElmt[l])
             r = hypotenuse(g, 1)
 
-            # Avoiding cancelation
+          
             sin = g + sign(g)*r
 
             g = diag[m] - p + subdElmt[l] / sin
@@ -100,7 +100,7 @@ def getEigenRight(mat, eps = 1.e-5):
                 diag[i + 1] = g + p 
                 g = cos * r - b 
 
-                # Compute eigenvectors
+                
                 singularMatrix[:, i:i + 2] = singularMatrix[:, i:i + 2]\
                                             .dot(np.array([[cos, sin],
                                                           [-sin, cos]], dtype=np.float64))
@@ -122,7 +122,7 @@ def getSVD(matrix):
     mcopy = matrix.copy()
     row, col = mcopy.shape
 
-    # Column should be higher than row
+   
     if isFlipped(matrix):
         mcopy = mcopy.T
         row, col = mcopy.shape
@@ -130,11 +130,11 @@ def getSVD(matrix):
     u = np.zeros((row, row))
     eigval, v = getEigenRight(mcopy)
 
-    # Only take nonzero eigenvalue
+   
     sigma = np.array([math.sqrt(x) for x in eigval if x != 0])
     maxrank = len(sigma)
     
-    # Compute u from v
+    
     for i in range(maxrank):
         u[:, i] = mcopy @ v[:, i] / sigma[i]
 
@@ -160,77 +160,101 @@ def getReducedMatrix(matrix, percent):
         return reduced
 
 def compressImage(imagepath, percent, outputName):
-      # img = cv.imread(imagepath, cv.IMREAD_UNCHANGED)
     img = Image.open(imagepath)
     format = imagepath.split(".")
 
-    # Convert PNG from P to RGBA
-    if (format[1] == "png" and img.getbands()[0] == "P"):
-        img = img.convert("RGBA")
-    img =  np.asarray(img)
-    print(img.shape)
     
+    # print(img.shape)
+    channel = img.getbands()
+    print(channel)
     # Handle file such as .png
-    
-    if img.shape[-1] == 4:
-        r = img[:,:,0]
-        g = img[:,:,1]
-        b = img[:,:,2]
-        a = img[:,:,3]
-
-        # b, g, r, a = cv.split(img)
-        reducedRed = getReducedMatrix(r, percent)
-        reducedGreen = getReducedMatrix(g, percent)
-        reducedBlue = getReducedMatrix(b, percent)
-        alpha = np.matrix(a, dtype=np.float64)
-
-        img[:,:,0] = reducedRed
-        img[:,:,1] = reducedGreen
-        img[:,:,2] = reducedBlue
-        img[:,:,3] = alpha
-        img = np.clip(img,0,255)
-        img = Image.fromarray(np.uint8(img))
-
-        # img = img.quantize(256)
-        # paletteA = img.getpalette()
-       
-        # # img.convert("P", palette=Image.ADAPTIVE, colors=8)
-       
-        # palette = [tuple(paletteA[x:x+3]) for x in range(0, len(paletteA), 3)]
-        # #print(len(palette))
-        # palette = palette[:256]
-        # print(palette)
-        # img.convert("RGBA", palette=palette, colors=32)
-        result = Image.fromarray(np.uint8(img))
-        result.save(outputName)
-
-    # Handle file such as .jpg or .jpeg, but RGB/BGR
-    elif img.shape[-1] == 3:
-       # b, g, r = cv.split(img)
-        r = img[:,:,0]
-        g = img[:,:,1]
-        b = img[:,:,2]
-
-        reducedRed = getReducedMatrix(r, percent)
-        reducedGreen = getReducedMatrix(g, percent)
-        reducedBlue = getReducedMatrix(b, percent)
-
-        result = np.zeros(img.shape)
-        result[:,:,0] = reducedRed
-        result[:,:,1] = reducedGreen
-        result[:,:,2] = reducedBlue
-        result = np.clip(result,0,255)
-        result = Image.fromarray(np.uint8(result))
-       
-        result.save(outputName)
-
-
-    # Handle black and white image
-    else: 
+    if (channel[0] == "L"  and len(channel)==1):
+        img =  np.asarray(img)
         gray = img.copy()
         reducedPict = getReducedMatrix(gray, percent)
         # cv.imwrite(outputName, img)
         result= Image.fromarray(np.uint8(reducedPict))
         result.save(outputName)
+
+    # PNG yang berwarna dan memiliki alpha channel
+    elif (channel[0] == "P"  and len(channel)==1) or (channel ==('R','G','B','A')) :
+        img = img.convert("RGBA")
+        img =  np.asarray(img)
+
+        r = img[:,:,0]
+        g = img[:,:,1]
+        b = img[:,:,2]
+
+        # b, g, r, a = cv.split(img)
+        reducedRed = getReducedMatrix(r, percent)
+        reducedGreen = getReducedMatrix(g, percent)
+        reducedBlue = getReducedMatrix(b, percent)
+
+        img[:,:,0] = reducedRed
+        img[:,:,1] = reducedGreen
+        img[:,:,2] = reducedBlue
+        img = np.clip(img,0,255)
+
+        result = Image.fromarray(np.uint8(img)).convert("P")
+        result.save(outputName)
+
+    #PNG warna tanpa alpha atau JPG 
+    elif (channel == ('R','G','B')):
+
+
+        if (format[1]=='png'):
+            numberOfChannel = np.asarray(img).shape[2]
+            if (numberOfChannel != 3):
+                img = img.convert("RGBA")
+
+        img =  np.asarray(img)
+
+        r = img[:,:,0]
+        g = img[:,:,1]
+        b = img[:,:,2]
+
+        # b, g, r, a = cv.split(img)
+        reducedRed = getReducedMatrix(r, percent)
+        reducedGreen = getReducedMatrix(g, percent)
+        reducedBlue = getReducedMatrix(b, percent)
+
+        img[:,:,0] = reducedRed
+        img[:,:,1] = reducedGreen
+        img[:,:,2] = reducedBlue
+        img = np.clip(img,0,255)
+
+        result = Image.fromarray(np.uint8(img))
+        if (format[1]=='png'):
+            result.convert("P")
+
+        result.save(outputName)
+
+    # else:
+        # if (format[1]=='png'):
+        #     numberOfChannel = np.asarray(img).shape[2]
+        #     if (numberOfChannel != 3):
+        #         img = img.convert("RGBA")
+
+        # img =  np.asarray(img)
+
+        # r = img[:,:,0]
+        # g = img[:,:,1]
+        # b = img[:,:,2]
+
+        # # b, g, r, a = cv.split(img)
+        # reducedRed = getReducedMatrix(r, percent)
+        # reducedGreen = getReducedMatrix(g, percent)
+        # reducedBlue = getReducedMatrix(b, percent)
+
+        # img[:,:,0] = reducedRed
+        # img[:,:,1] = reducedGreen
+        # img[:,:,2] = reducedBlue
+        # img = np.clip(img,0,255)
+
+        # result = Image.fromarray(np.uint8(img))
+        # # if (format[1]=='png'):
+        # #     result.convert("P")
+
+        # result.save(outputName)
 
     return result

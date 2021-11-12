@@ -46,6 +46,10 @@ def compressed(imgname, percent):
     output_dir = file_dir + f"{percent}_{imgname}"
     if not(os.path.isfile(output_dir)):
         _ = compressImage(imgpath, percent, output_dir)
+
+    originalSize = os.path.getsize(imgpath)
+    compressedSize = os.path.getsize(output_dir)
+
     return send_file(output_dir, as_attachment=True)
 
 if __name__ == "__main__":
