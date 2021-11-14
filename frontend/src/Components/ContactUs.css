@@ -1,0 +1,38 @@
+* {
+    font-family: 'Montserrat', sans-serif;
+    text-decoration: none;
+}
+
+.cardColor {
+    background: #FEF5ED;
+    text-align: center;
+    align-content: center;
+}
+
+.contact-us-body {
+    margin-top: 4rem;
+    margin-left: 5rem;
+    margin-right: 5rem;
+    margin-bottom: 2rem;
+    border: #99A799;
+    border-radius: 1rem;
+    border-style: solid;
+    padding: 2rem;
+    background-color: #FEF5ED;
+}
+
+.contact-us-title {
+    font-size: xx-large;
+    font-weight: 700;
+}
+
+.contact-us-subtitle {
+    font-weight: 400;
+    font-style: oblique;
+    font-size: medium;
+}
+
+.icon-style {
+    margin-top: 1rem;
+    color: teal !important;
+}

@@ -1,0 +1,69 @@
+* {
+    font-family: 'Montserrat', sans-serif;
+    text-decoration: none;
+}
+
+.navbar {
+    background-color: rgb(153, 167, 153) !important;
+    color: #FEF5ED !important;
+}
+
+.navbar-team {
+    color: #FEF5ED !important;
+    justify-self: start;
+    margin-left: 0rem;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: xx-large;
+    display: flex;
+    align-items: right;
+    font-weight: 800;
+    margin-right: 5rem;
+}
+
+.fa-gamepad {
+    margin-left: 1rem;
+    margin-right: 1rem;
+    margin-top: 0.5rem;
+}
+
+.choices {
+    background-color: rgb(153, 167, 153);
+    color: #FEF5ED;
+    display: flex;
+    text-decoration: none;
+    padding: 0.2rem 0.5rem;
+    height: 100%;
+    font-size: medium;
+}
+  
+.choices:hover {
+    border-bottom: 4px solid #ADC2A9;
+    transition: all 0.2s ease-out;
+}
+
+@media screen and (max-width: 960px) {
+    .navbar-choice {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 90%;
+      left: -100%;
+      opacity: 1;
+      transition: all 0.5s ease;
+    }
+
+    .choices {
+      text-align: center;
+      padding: 0.5rem;
+      width: 100%;
+      display: table;
+      background-color: rgb(153, 167, 153);
+    }
+  
+    .choices:hover {
+      background-color: #FEF5ED;
+      color: #242424;
+      border-radius: 0;
+    }
+  }

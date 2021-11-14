@@ -1,0 +1,31 @@
+* {
+    font-family: 'Montserrat', sans-serif;
+    text-decoration: none;
+}
+
+.about-body {
+    margin-top: 7rem;
+    margin-left: 5rem;
+    margin-right: 5rem;
+    margin-bottom: 2rem;
+    border: #99A799;
+    border-radius: 1rem;
+    border-style: solid;
+    padding: 2rem;
+    background-color: #FEF5ED;
+}
+
+.about-title {
+    font-size: xx-large;
+    font-weight: 700;
+}
+
+.about-exp {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.about-subtitle {
+    font-weight: 400;
+    font-style: oblique;
+}
