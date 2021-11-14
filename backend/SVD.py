@@ -17,10 +17,10 @@ by Reinsch, Martin, and Wilkinson
 #   IMPORTS
 from scipy import linalg
 import numpy as np
-import cv2 as cv
+# import cv2 as cv
 import math
 from PIL import Image
-
+ 
 #   CODES
 def sign(number):
     return 1 if (round(number, 3) > 0) else -1
@@ -148,113 +148,133 @@ def getReducedMatrix(matrix, percent):
     percent = 100 - percent
     r = math.ceil(percent/100 * maxrank)
 
+    print("maxrank " +str(maxrank))
+
+    pixelDiff = r*(row+col+1) / (row*col) *100
+    print("k dipake " + str(r))
+    print("pixeldiff sekian " + str(pixelDiff))
+
+    reduced = np.zeros(matrix.shape)
     matsig = np.matrix(np.zeros((row, col)), dtype=np.float64)
     np.fill_diagonal(matsig, sigma)
     ui = np.matrix(u[:, :r])
     vi = np.matrix(v.T[:r, :])
     reduced = ui @ matsig[:r, :r] @ vi
 
+    # reduced = (u[:, :r])* sigma[:r] @ (v.T[:r, :])
+    
     if isFlipped(matrix):
         return reduced.T
     else:
-        return reduced
+        return reduced 
+
+
+
+
 
 def compressImage(imagepath, percent, outputName):
     img = Image.open(imagepath)
-    format = imagepath.split(".")
-
-    
-    # print(img.shape)
+    format = imagepath.split(".")[1]
     channel = img.getbands()
     print(channel)
-    # Handle file such as .png
-    if (channel[0] == "L"  and len(channel)==1):
-        img =  np.asarray(img)
-        gray = img.copy()
-        reducedPict = getReducedMatrix(gray, percent)
-        # cv.imwrite(outputName, img)
-        result= Image.fromarray(np.uint8(reducedPict))
-        result.save(outputName)
 
-    # PNG yang berwarna dan memiliki alpha channel
-    elif (channel[0] == "P"  and len(channel)==1) or (channel ==('R','G','B','A')) :
-        img = img.convert("RGBA")
-        img =  np.asarray(img)
+    # PNG
+    if (format=='png'):
+        
+        # Black and white with alpha channel
+        if (channel[0] == ("L", "A")):
+            img =  np.asarray(img)
+            print("img shape", img.shape)
+            alpha = img[:,1]
+            gray = img[:,0]
+            
+            reducedPict = getReducedMatrix(gray, percent)
+            img = np.zeros(img.shape)
+            img[:,1] = alpha
+            img[:,0] = reducedPict
 
-        r = img[:,:,0]
-        g = img[:,:,1]
-        b = img[:,:,2]
+            result= Image.fromarray(np.uint8(img))
+            result.save(outputName)
 
-        # b, g, r, a = cv.split(img)
-        reducedRed = getReducedMatrix(r, percent)
-        reducedGreen = getReducedMatrix(g, percent)
-        reducedBlue = getReducedMatrix(b, percent)
+        # Black and white without alpha channel
+        elif (channel[0] == "L"):
+            img =  np.asarray(img)
+            print("img shape", img.shape)
+            reducedPict = getReducedMatrix(img, percent)
+            result= Image.fromarray(np.uint8(reducedPict))
+            result.save(outputName)
+        
+        # Colour PNG with/without alpha + P channel
+        else:
+            mode = "RGB"
+            # P channel (8 Bit)
+            Imgpalette = img.getpalette()
+            if (channel[0]=='P'):
+                img = img.convert("RGBA")
+                mode = "RGBA"
 
-        img[:,:,0] = reducedRed
-        img[:,:,1] = reducedGreen
-        img[:,:,2] = reducedBlue
-        img = np.clip(img,0,255)
-
-        result = Image.fromarray(np.uint8(img)).convert("P")
-        result.save(outputName)
-
-    #PNG warna tanpa alpha atau JPG 
-    elif (channel == ('R','G','B')):
-
-
-        if (format[1]=='png'):
+            # PNG with alpha channel (32 bit)
             numberOfChannel = np.asarray(img).shape[2]
             if (numberOfChannel != 3):
                 img = img.convert("RGBA")
+                mode = "RGBA"
+                img.convert()
+            img =  np.asarray(img)
+            print("img shape", img.shape)
+            # Save alpha channel
+            if (mode== "RGBA"):
+                alpha = img[:,:,3] 
 
-        img =  np.asarray(img)
+            r = img[:,:,0]
+            g = img[:,:,1]
+            b = img[:,:,2]
 
-        r = img[:,:,0]
-        g = img[:,:,1]
-        b = img[:,:,2]
+            reducedRed = getReducedMatrix(r, percent)
+            reducedGreen = getReducedMatrix(g, percent)
+            reducedBlue = getReducedMatrix(b, percent)
 
-        # b, g, r, a = cv.split(img)
-        reducedRed = getReducedMatrix(r, percent)
-        reducedGreen = getReducedMatrix(g, percent)
-        reducedBlue = getReducedMatrix(b, percent)
+            img=np.zeros(img.shape)
+            img[:,:,0] = reducedRed
+            img[:,:,1] = reducedGreen
+            img[:,:,2] = reducedBlue
 
-        img[:,:,0] = reducedRed
-        img[:,:,1] = reducedGreen
-        img[:,:,2] = reducedBlue
-        img = np.clip(img,0,255)
+            if (mode == "RGBA"):
+                img[:,:,3] =alpha
 
-        result = Image.fromarray(np.uint8(img))
-        if (format[1]=='png'):
-            result.convert("P")
+            img = np.clip(img,0,255)
 
-        result.save(outputName)
+            result = Image.fromarray(np.uint8(img)).convert("P",palette=Image.ADAPTIVE)
+            result.save(outputName)
 
-    # else:
-        # if (format[1]=='png'):
-        #     numberOfChannel = np.asarray(img).shape[2]
-        #     if (numberOfChannel != 3):
-        #         img = img.convert("RGBA")
+    # JPG,JPEG
+    else:
+        if (channel == ('R','G','B')):
+            img =  np.asarray(img)
+            print("img shape", img.shape)
+            r = img[:,:,0]
+            g = img[:,:,1]
+            b = img[:,:,2]
 
-        # img =  np.asarray(img)
+            # b, g, r, a = cv.split(img)
+            reducedRed = getReducedMatrix(r, percent)
+            reducedGreen = getReducedMatrix(g, percent)
+            reducedBlue = getReducedMatrix(b, percent)
 
-        # r = img[:,:,0]
-        # g = img[:,:,1]
-        # b = img[:,:,2]
+            img=np.zeros(img.shape)
+            img[:,:,0] = reducedRed
+            img[:,:,1] = reducedGreen
+            img[:,:,2] = reducedBlue
+            img = np.clip(img,0,255)
 
-        # # b, g, r, a = cv.split(img)
-        # reducedRed = getReducedMatrix(r, percent)
-        # reducedGreen = getReducedMatrix(g, percent)
-        # reducedBlue = getReducedMatrix(b, percent)
+            result = Image.fromarray(np.uint8(img))
+            result.save(outputName)
 
-        # img[:,:,0] = reducedRed
-        # img[:,:,1] = reducedGreen
-        # img[:,:,2] = reducedBlue
-        # img = np.clip(img,0,255)
-
-        # result = Image.fromarray(np.uint8(img))
-        # # if (format[1]=='png'):
-        # #     result.convert("P")
-
-        # result.save(outputName)
+    # Handle black and white JPG 
+        else:
+            img =  np.asarray(img)
+            print("img shape", img.shape)
+            reducedPict = getReducedMatrix(img, percent)
+            result= Image.fromarray(np.uint8(reducedPict))
+            result.save(outputName)
 
     return result
