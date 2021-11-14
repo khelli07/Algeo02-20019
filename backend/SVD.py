@@ -17,7 +17,6 @@ by Reinsch, Martin, and Wilkinson
 #   IMPORTS
 from scipy import linalg
 import numpy as np
-# import cv2 as cv
 import math
 from PIL import Image
  
@@ -48,9 +47,10 @@ def getEigenRight(mat, eps = 1.e-5):
     for l in range(n):
         j = 0
         while True:
+            # Look for small subdiagonal element
+            # to effectively split matrix
             m = l
             while True:
-                
                 if (m + 1) == n:
                     break
                 
@@ -66,18 +66,19 @@ def getEigenRight(mat, eps = 1.e-5):
 
             j += 1
 
-           
+            # From shift 
             p = diag[l]
             g = (diag[l + 1] - p) / (2 * subdElmt[l])
             r = hypotenuse(g, 1)
-
           
+            # Apply shift (dm - ks)
             sin = g + sign(g)*r
-
             g = diag[m] - p + subdElmt[l] / sin
 
             sin, cos, p = 1, 1, 0
 
+            # Plane rotation followed by Givens rotation
+            # to restore the tridiagonal form
             for i in range(m - 1, l - 1, -1):
                 f = sin * subdElmt[i]
                 b = cos * subdElmt[i]
@@ -100,15 +101,17 @@ def getEigenRight(mat, eps = 1.e-5):
                 diag[i + 1] = g + p 
                 g = cos * r - b 
 
-                
-                singularMatrix[:, i:i + 2] = singularMatrix[:, i:i + 2]\
-                                            .dot(np.array([[cos, sin],
-                                                          [-sin, cos]], dtype=np.float64))
+                # Accumulate eigenvectors
+                singularMatrix[:, i:i + 2] = \
+                    singularMatrix[:, i:i + 2].dot(np.array([[cos, sin],
+                                                            [-sin, cos]], dtype=np.float64))
  
             diag[l] -= p
             subdElmt[l] = g
             subdElmt[m] = 0
 
+    # Rearrange eigenvectors and eigenvalue
+    # so they align with SVD's rule
     eigenval = np.array(diag.copy())
     eigenval[np.where(eigenval < 0)] = 0
     sortedIdx = np.argsort(eigenval)[::-1]
@@ -122,7 +125,6 @@ def getSVD(matrix):
     mcopy = matrix.copy()
     row, col = mcopy.shape
 
-   
     if isFlipped(matrix):
         mcopy = mcopy.T
         row, col = mcopy.shape
@@ -130,11 +132,11 @@ def getSVD(matrix):
     u = np.zeros((row, row))
     eigval, v = getEigenRight(mcopy)
 
-   
     sigma = np.array([math.sqrt(x) for x in eigval if x != 0])
     maxrank = len(sigma)
     
-    
+    # Form U with sigma, input matrix, and V
+    # Only works if width < height (portrait or square)
     for i in range(maxrank):
         u[:, i] = mcopy @ v[:, i] / sigma[i]
 
@@ -148,11 +150,7 @@ def getReducedMatrix(matrix, percent):
     percent = 100 - percent
     r = math.ceil(percent/100 * maxrank)
 
-    print("maxrank " +str(maxrank))
-
     pixelDiff = r*(row+col+1) / (row*col) *100
-    print("k dipake " + str(r))
-    print("pixeldiff sekian " + str(pixelDiff))
 
     reduced = np.zeros(matrix.shape)
     matsig = np.matrix(np.zeros((row, col)), dtype=np.float64)
@@ -160,35 +158,28 @@ def getReducedMatrix(matrix, percent):
     ui = np.matrix(u[:, :r])
     vi = np.matrix(v.T[:r, :])
     reduced = ui @ matsig[:r, :r] @ vi
-
-    # reduced = (u[:, :r])* sigma[:r] @ (v.T[:r, :])
     
     if isFlipped(matrix):
-        return reduced.T
+        return reduced.T, pixelDiff
     else:
-        return reduced 
-
-
-
-
+        return reduced, pixelDiff
 
 def compressImage(imagepath, percent, outputName):
     img = Image.open(imagepath)
     format = imagepath.split(".")[1]
     channel = img.getbands()
-    print(channel)
+    pDiffList = []
 
     # PNG
     if (format=='png'):
-        
         # Black and white with alpha channel
         if (channel[0] == ("L", "A")):
             img =  np.asarray(img)
-            print("img shape", img.shape)
             alpha = img[:,1]
             gray = img[:,0]
             
-            reducedPict = getReducedMatrix(gray, percent)
+            reducedPict, pDiff = getReducedMatrix(gray, percent)
+            pDiffList.append(pDiff)
             img = np.zeros(img.shape)
             img[:,1] = alpha
             img[:,0] = reducedPict
@@ -199,8 +190,8 @@ def compressImage(imagepath, percent, outputName):
         # Black and white without alpha channel
         elif (channel[0] == "L"):
             img =  np.asarray(img)
-            print("img shape", img.shape)
-            reducedPict = getReducedMatrix(img, percent)
+            reducedPict, pDiff = getReducedMatrix(img, percent)
+            pDiffList.append(pDiff)
             result= Image.fromarray(np.uint8(reducedPict))
             result.save(outputName)
         
@@ -220,7 +211,6 @@ def compressImage(imagepath, percent, outputName):
                 mode = "RGBA"
                 img.convert()
             img =  np.asarray(img)
-            print("img shape", img.shape)
             # Save alpha channel
             if (mode== "RGBA"):
                 alpha = img[:,:,3] 
@@ -229,9 +219,12 @@ def compressImage(imagepath, percent, outputName):
             g = img[:,:,1]
             b = img[:,:,2]
 
-            reducedRed = getReducedMatrix(r, percent)
-            reducedGreen = getReducedMatrix(g, percent)
-            reducedBlue = getReducedMatrix(b, percent)
+            reducedRed, pDiff = getReducedMatrix(r, percent)
+            pDiffList.append(pDiff)
+            reducedGreen, pDiff = getReducedMatrix(g, percent)
+            pDiffList.append(pDiff)
+            reducedBlue, pDiff = getReducedMatrix(b, percent)
+            pDiffList.append(pDiff)
 
             img=np.zeros(img.shape)
             img[:,:,0] = reducedRed
@@ -250,15 +243,16 @@ def compressImage(imagepath, percent, outputName):
     else:
         if (channel == ('R','G','B')):
             img =  np.asarray(img)
-            print("img shape", img.shape)
             r = img[:,:,0]
             g = img[:,:,1]
             b = img[:,:,2]
 
-            # b, g, r, a = cv.split(img)
-            reducedRed = getReducedMatrix(r, percent)
-            reducedGreen = getReducedMatrix(g, percent)
-            reducedBlue = getReducedMatrix(b, percent)
+            reducedRed, pDiff = getReducedMatrix(r, percent)
+            pDiffList.append(pDiff)
+            reducedGreen, pDiff = getReducedMatrix(g, percent)
+            pDiffList.append(pDiff)
+            reducedBlue, pDiff = getReducedMatrix(b, percent)
+            pDiffList.append(pDiff)
 
             img=np.zeros(img.shape)
             img[:,:,0] = reducedRed
@@ -272,9 +266,10 @@ def compressImage(imagepath, percent, outputName):
     # Handle black and white JPG 
         else:
             img =  np.asarray(img)
-            print("img shape", img.shape)
-            reducedPict = getReducedMatrix(img, percent)
+            reducedPict, pDiff = getReducedMatrix(img, percent)
+            pDiffList.append(pDiff)
             result= Image.fromarray(np.uint8(reducedPict))
             result.save(outputName)
 
-    return result
+    averagePDiff = sum(pDiffList) / len(pDiffList)
+    return result, averagePDiff

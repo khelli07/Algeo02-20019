@@ -3,12 +3,9 @@
   margin: 0;
   box-sizing: border-box;
 }
-<<<<<<< HEAD
 
 #root {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
-=======
->>>>>>> 7086b69f9efd71a516524bd1a8632e161e22e158
