@@ -1,10 +1,7 @@
-import os
 from flask import Flask, request, json, send_file
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from os.path import join, dirname, realpath
-
-from werkzeug.wrappers import response
 from SVD import *
 
 # DEFINE APP
@@ -39,7 +36,6 @@ def upload():
             response = json.dumps(
                 {"message": "Upload image successful!"}), 
                 status = 200)
-
     else:
         response = app.response_class(
             response = json.dumps(
@@ -53,8 +49,15 @@ def compressed(imgname, percent):
     file_dir = app.config['BACKEND_UPLOAD']
     imgpath = file_dir + imgname
     output_dir = file_dir + f"{percent}_{imgname}"
-    _, PIXEL_DIFF= compressImage(imgpath, percent, output_dir)
+    global PIXEL_DIFF
+    _, PIXEL_DIFF = compressImage(imgpath, percent, output_dir)
+    return send_file(output_dir, as_attachment=True)
 
+@app.route('/download/<string:imgname>/<int:percent>', methods=['GET'])
+def download(imgname, percent):
+    # FILE DIJAMIN ADA
+    file_dir = app.config['BACKEND_UPLOAD']
+    output_dir = file_dir + f"{percent}_{imgname}"
     return send_file(output_dir, as_attachment=True)
 
 @app.route('/get_pixel_diff', methods=['GET'])

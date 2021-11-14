@@ -14,32 +14,31 @@ import { useElapsedTime } from "use-elapsed-time";
 export default function Cards() {
   const endpoint = "http://127.0.0.1:5000";
 
-  const [compressedStatus, setCompressedStatus] = useState(0);
   const [uploadImage, setUploadImage] = useState(false);
   const [uploadedImage, setUploadedImage] = useState({
     file: "",
     filepreview: "",
   });
-  const [isPlaying, setIsPlaying] = useState(false);
-  const { elapsedTime } = useElapsedTime({ isPlaying });
+
+  const [compressedStatus, setCompressedStatus] = useState(0);
+  const [recompress, setRecompress] = useState(1);
   const [percent, setPercent] = useState(50);
   const [pDiff, setPDiff] = useState(0);
 
+  const [isPlaying, setIsPlaying] = useState(false);
+  const { elapsedTime } = useElapsedTime({ isPlaying });
   const fileInput = React.useRef(null);
-
-  const imgUploadHandler = (event) => {
-    fileInput.current.click();
-  };
 
   const imgSelectHandler = (event) => {
     setUploadedImage({
       file: event.target.files[0],
       filepreview: URL.createObjectURL(event.target.files[0]),
     });
+    setRecompress(1);
     setUploadImage(true);
   };
 
-  const imgCompressCaller = () => {
+  const imgCompressHandler = () => {
     const fd = new FormData();
     fd.append("file", uploadedImage.file);
     axios
@@ -56,10 +55,10 @@ export default function Cards() {
       let response = await axios.get(
         `${endpoint}/compressed/${imgname}/${percent}`
       );
-      let px = await axios.get(`${endpoint}/get_pixel_diff`);
-      setPDiff(px);
-      console.log(px);
-      console.log(pDiff);
+      let pxlResponse = await axios.get(`${endpoint}/get_pixel_diff`);
+      let data = await pxlResponse.data;
+      setPDiff(data.pixel_diff);
+      setRecompress(0);
       setCompressedStatus(1);
       setIsPlaying(false);
     } catch (error) {
@@ -88,7 +87,7 @@ export default function Cards() {
                 <Button
                   className="upDownBtn"
                   variant="contained"
-                  onClick={imgUploadHandler}
+                  onClick={() => fileInput.current.click()}
                 >
                   Upload an image
                 </Button>
@@ -111,26 +110,42 @@ export default function Cards() {
               {compressedStatus !== 0 ? (
                 <Card.Img
                   className="downImage"
-                  src={`http://localhost:5000/compressed/${uploadedImage.file.name}/${percent}`}
+                  src={`${endpoint}/compressed/${uploadedImage.file.name}/${percent}`}
                 ></Card.Img>
               ) : (
                 <Card.Img className="downCloudImage" src={DownImage}></Card.Img>
               )}
               <div className="d-flex justify-content-center upload-btn-wrapper">
                 {uploadImage ? (
-                  <a
-                    href={`http://localhost:5000/compressed/${uploadedImage.file.name}/${percent}`}
-                    target="_blank"
-                    download
-                  >
-                    <Button
-                      className="upDownBtn"
-                      variant="contained"
-                      onClick=""
+                  recompress ? (
+                    <a
+                      href={`${endpoint}/compressed/${uploadedImage.file.name}/${percent}`}
+                      target="_blank"
+                      download
                     >
-                      Download image
-                    </Button>
-                  </a>
+                      <Button
+                        className="upDownBtn"
+                        variant="contained"
+                        onClick=""
+                      >
+                        Download image
+                      </Button>
+                    </a>
+                  ) : (
+                    <a
+                      href={`${endpoint}/download/${uploadedImage.file.name}/${percent}`}
+                      target="_blank"
+                      download
+                    >
+                      <Button
+                        className="upDownBtn"
+                        variant="contained"
+                        onClick=""
+                      >
+                        Download image
+                      </Button>
+                    </a>
+                  )
                 ) : (
                   <></>
                 )}
@@ -163,7 +178,7 @@ export default function Cards() {
       </div>
       <div className="d-flex justify-content-center upload-btn-wrapper">
         {uploadImage ? (
-          <Button onClick={imgCompressCaller} className="compress-button">
+          <Button onClick={imgCompressHandler} className="compress-button">
             Compress!
           </Button>
         ) : (
@@ -171,11 +186,11 @@ export default function Cards() {
         )}
       </div>
       <div className="timer">
-        {uploadImage ? (
-          <h5>Time elapsed: {elapsedTime.toFixed(2)} s</h5>
-        ) : (
-          <></>
-        )}
+        <h5>Time elapsed: {uploadImage ? elapsedTime.toFixed(2) : 0} s</h5>
+      </div>
+
+      <div className="timer">
+        <h5>Pixel difference: {pDiff ? pDiff.toFixed(4) : 0}</h5>
       </div>
     </>
   );
