@@ -24,9 +24,10 @@ export default function Cards() {
   const [recompress, setRecompress] = useState(1);
   const [percent, setPercent] = useState(50);
   const [pDiff, setPDiff] = useState(0);
-
+  
+  const iniTime = 0;
   const [isPlaying, setIsPlaying] = useState(false);
-  const { elapsedTime } = useElapsedTime({ isPlaying });
+  const { elapsedTime, reset } = useElapsedTime({ isPlaying,  iniTime });
   const fileInput = React.useRef(null);
 
   const imgSelectHandler = (event) => {
@@ -50,7 +51,6 @@ export default function Cards() {
 
   async function dataImage(imgname, percent) {
     setIsPlaying(true);
-    console.log(imgname, percent);
     try {
       let response = await axios.get(
         `${endpoint}/compressed/${imgname}/${percent}`
@@ -165,6 +165,7 @@ export default function Cards() {
                 <RangeSlider
                   value={percent}
                   onChange={(e) => setPercent(e.target.value)}
+                  disabled={isPlaying}
                 />
               </Col>
               <Col lg="3" className="numer-comp-rate">
@@ -178,7 +179,7 @@ export default function Cards() {
       </div>
       <div className="d-flex justify-content-center upload-btn-wrapper">
         {uploadImage ? (
-          <Button onClick={imgCompressHandler} className="compress-button">
+          <Button onClick={imgCompressHandler} className="compress-button" disabled={isPlaying}>
             Compress!
           </Button>
         ) : (
