@@ -25,9 +25,8 @@ export default function Cards() {
   const [percent, setPercent] = useState(50);
   const [pDiff, setPDiff] = useState(0);
   
-  const iniTime = 0;
   const [isPlaying, setIsPlaying] = useState(false);
-  const { elapsedTime, reset } = useElapsedTime({ isPlaying,  iniTime });
+  const { elapsedTime, reset } = useElapsedTime({ isPlaying });
   const fileInput = React.useRef(null);
 
   const imgSelectHandler = (event) => {
@@ -50,7 +49,9 @@ export default function Cards() {
   };
 
   async function dataImage(imgname, percent) {
+    reset();
     setIsPlaying(true);
+    console.log(imgname, percent);
     try {
       let response = await axios.get(
         `${endpoint}/compressed/${imgname}/${percent}`
