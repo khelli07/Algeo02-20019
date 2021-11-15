@@ -1,33 +1,40 @@
 # SVD Based Image Compression Website
-> Website for image compression done with Singular Value Decomposition Algorithm. A task (and exploration media) for IF2123 Linear and Geometry Algebra ITB 2021.
+
+> This is a web-based image compression done with Singular Value Decomposition Algorithm. An assignment (and exploration media) for IF2123 Linear and Geometry Algebra ITB 2021.
 
 <br>
 
 ## Table of Contents
+
 <hr>
-* [General Info](#general-information)
-* [Technologies Used](#technologies-used)
-* [Features](#features)
-* [Screenshots](#screenshots)
-* [Setup](#setup)
-* [Usage](#usage)
-* [Project Status](#project-status)
-* [Room for Improvement](#room-for-improvement)
-* [Acknowledgements](#acknowledgements)
-* [Contact](#contact)
+
+- [General Info](#general-information)
+- [Technologies Used](#technologies-used)
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Setup](#setup)
+- [Usage](#usage)
+- [Project Status](#project-status)
+- [Room for Improvement](#room-for-improvement)
+- [Acknowledgements](#acknowledgements)
+- [Contact](#contact)
 
 <br>
 <br>
 
 ## General Information
+
 <hr>
 Gambar merupakan salah satu media yang penting keberadaannya di dunia modern ini. Sayangnya, gambar, karena ukurannya yang dapat relatif besar, relatif sulit untuk dikirimkan. Kompresi gambar merupakan suatu tipe kompresi data yang dapat dilakukan pada gambar digital. Dengan kompresi gambar, suatu file gambar digital dapat dikurangi ukuran filenya dengan baik tanpa mempengaruhi kualitas gambar secara signifikan.
-
-Singular Value Decomposition merupakan salah satu metode yang dapat digunakan dalam rangka kompresi gambar. Pada tugas besar ini, kami menggunakan algoritma Implicit QL oleh Dubrulle, Martin, dan Wilkinson dalam buku yang dipublikasikan pada tahun 1971 berjudul Handbook for Automatic Computation Linear Algebra Volume II. Algoritma yang digunakan adalah algoritma QL (nonimplisit) dengan pergeseran (shift). Pergeseran yang dilakukan untuk mempercepat konvergensi matriks sehingga menurunkan kompleksitas algoritma. Pemilihan pergeseran sebetulnya bisa saja diambil secara bebas karena pada akhirnya akan ditambahkan kembali kecuali jika pergeseran tersebut membuat komponen matriks menjadi nol (cancellation).
+<br><br>
+Singular Value Decomposition merupakan salah satu metode yang dapat digunakan dalam rangka kompresi gambar. Pada tugas besar ini, kami menggunakan algoritma Implicit QL oleh Dubrulle, Martin, dan Wilkinson dalam buku yang dipublikasikan pada tahun 1971 berjudul Handbook for Automatic Computation Linear Algebra Volume II. 
+<br><br>
+Algoritma yang digunakan adalah algoritma QL (nonimplisit) dengan pergeseran (shift). Pergeseran yang dilakukan untuk mempercepat konvergensi matriks sehingga menurunkan kompleksitas algoritma. Pemilihan pergeseran sebetulnya bisa saja diambil secara bebas karena pada akhirnya akan ditambahkan kembali kecuali jika pergeseran tersebut membuat komponen matriks menjadi nol (cancellation).
 
 <br>
 
 ## Technologies Used
+
 <hr>
 <ul>
     <li>Python - version 3.9.0</li>
@@ -58,11 +65,12 @@ Singular Value Decomposition merupakan salah satu metode yang dapat digunakan da
     <li>Pillow - version 8.4.0</li>
 </ul>
 
-
 <br>
 
 ## Features
+
 This website contains 3 features, namely:
+
 - Image Compression
 - Image Download (post-compression)
 - Statistics of compression, including compression time and pixel difference
@@ -70,6 +78,7 @@ This website contains 3 features, namely:
 <br>
 
 ## Screenshots
+
 ![Home Landing Page](https://drive.google.com/uc?export=view&id=156o0v5kZpVzgeNbfg_1aWxyK19NsMFtH)
 ![About Landing Page](https://drive.google.com/uc?export=view&id=1rW1zS33jmQp1yCzm_33DhDOryCFU_k5g)
 ![Contact Landing Page](https://drive.google.com/uc?export=view&id=1G4CIUzDDXKKzeai66TYFI5WuLGBmF5sa)
@@ -81,43 +90,112 @@ This website contains 3 features, namely:
 <br>
 
 ## Setup
+
 <hr>
-To run this website locally, fork and clone this repository. Before setting up, make sure that you have the dependencies listed above installed. After that, go to terminal, enter the directory you cloned this project into, and press enter. Then, enter 'frontend', run ```npm install``` or directly run ```npm start```. A browser tab of localhost:3000 is then activated. To run backend, go to terminal again, get into 'backend' folder, and type ```py app.py```.
-Now, you can go back to your browser, refresh it, and it's set!
+To run this website locally, fork and clone this repository. Before setting up, make sure that you have the dependencies listed above installed. If you have not installed virtual environment, <strong>we encourage you to do so.</strong> This is to prevent changes (not always) to your other projects. Virtual environment will make your projects independent to each other.
+
+1. Install python venv
+
+```
+pip install virtualenv
+```
+
+2. Create virtualenv
+
+```
+virtualenv venv
+```
+
+3. Then, activate the virtual environment
+
+```
+backend\venv\Scripts\activate
+```
+
+4. Install python dependencies
+
+```
+pip install -r backend/requirements.txt
+```
+
+## If you use yarn
+
+1. You can <strong> change your directory to frontend</strong>, then
+
+```
+npm install --global yarn
+```
+
+You can use npm too, but the implementation with backend will be quite different.
+
+2. Then with different terminals, type
+
+```
+yarn start
+```
+
+```
+yarn start-api
+```
+
+## If you use npm
+
+1. Make 2 terminal, then in different terminal, do
+
+```
+cd frontend
+npm start
+```
+
+```
+cd backend
+py app.py
+```
+
+<strong> Do that on different terminal and line by line. </strong>
+
+Then the browser will start and you are all set!
 
 <br>
 
 ## Usage
+
 <hr>
 To utilize this website, simply press Upload Image button, choose image of yours, and hit OK. After that, Compress button will be activated along with a slider range. Drag left or right the range slider of your need then hit enter! You'll see the time it takes to compress the image you uploaded and the pixel difference. Finally, if you wish to save the image, press 'Download Image'
 
 <br>
 
 ## Project Status
+
 <hr>
-Project is: complete. Improvements may be made.
+Project is complete. Improvements may be made.
 
 <br>
 
-## Room for Improvement
+## Room for Improvement(s)
+
 <hr>
 This image compression website stil can't handle properly PNG formatted image compression. Improvements can be made since this project's output on PNG images still varies to each cases. Furthermore, we believe that there are many ways to search for the singular values. Hence, there might be improvements can be made on the algorithm.
 
 Room for improvement:
+
 - Compression for PNG formatted image
 - Algorithm optimization
 
 <br>
 
-## Acknowledgements
+## Acknowledgement
+
 <hr>
 Great thanks to...
-- Our lecturers of IF2123 Linear and Geometry Algebra Course ITB 2021, Pak Judhi, Pak Rin, dan ...
-- Course Lab Assistants
-- Our family, especially parents, and friends
+
+- Our lecturers of IF2123 Linear and Geometry Algebra Course ITB 2021, Mr. Judhi Santoso, Mr. Rinaldi Munir, and Mr. Rila Mandala.
+- Course Lab Assistants.
+- Our family, especially parents, and friends.
 
 <br>
 
 ## Contact
+
 <hr>
-Created by Mobilita (Rani, Suryanto, Khelli), 2021. Contacts can be seen on 'Contact Us' page! Feel free to contact!
+Created by Mobilita (Rani, Suryanto, Khelli), 2021. Contacts can be seen on 'Contact Us' page! Feel free to contact! :)
