@@ -115,7 +115,7 @@ backend\venv\Scripts\activate
 4. Install python dependencies
 
 ```
-pip install -r backend/requirements.txt
+pip install -r backend\requirements.txt
 ```
 
 ## If you use yarn
@@ -131,10 +131,14 @@ You can use npm too, but the implementation with backend will be quite different
 2. Then with different terminals, type
 
 ```
+cd src\frontend
 yarn start
 ```
 
+For the frontend terminal and for the backend terminal:
+
 ```
+cd src\frontend
 yarn start-api
 ```
 
@@ -143,12 +147,12 @@ yarn start-api
 1. Make 2 terminal, then in different terminal, do
 
 ```
-cd frontend
+cd src\frontend
 npm start
 ```
 
 ```
-cd backend
+cd src\backend
 py app.py
 ```
 
